@@ -1,4 +1,4 @@
-Welcome To My Online Drug Store app!
+# Welcome To My Online Drug Store app!
 
 this a personal project that I am currently developing in order for me to test my abilities as a developer!
 
@@ -6,21 +6,24 @@ In this website you can search and browse for durgs, add them to the cart and bu
 
 You can also match a drug based on your symptoms
 
-Tech Stack:
-Server:
+## Tech Stack:
 
-Language : Python
+### Server:
 
-Framework : Django
-Client:
+<b>Language</b> : Python
 
-Language : Typescript
+<b>Framework</b> : Django
 
-Framework : NextJS
+### Client:
 
-Styling : Tailwind CSS + CSS
-DataBase:
+<b>Language</b> : Typescript
 
-Type : SQL
+<b>Framework</b> : NextJS
 
-database : SQLite
+<b>Styling</b> : Tailwind CSS + CSS
+
+### DataBase:
+<b>Type</b> : SQL
+
+<b>database</b> : SQLite
+
