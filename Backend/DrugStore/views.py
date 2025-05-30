@@ -1,57 +1,134 @@
+import json
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+from Backend.DrugStore.models import Products
+from Backend.DrugStore.util.general import error_response
+from Backend.DrugStore.util.product import add_product, delete_product_by_id, get_product_by_id, get_product_list, product_to_json_serializable, search_product_by_token, unlist_product_by_id, update_product_by_id
 
 # Create your views here.
 
-
 #* Product Control Views
+
 def list_products(request) -> JsonResponse:
     """
-    View to list all products.
+    View to list all products, serialized to JSON.
     """
+    products = get_product_list()
+    serialized_products = [product_to_json_serializable(product) for product in products]
+    return JsonResponse(serialized_products, safe=False , status=200)
+
+def get_product(request) -> JsonResponse:
+    """
+    View to get details of a specific product.
+    """
+    try:
+        product_id = int(request.GET.get('id', None))
+    except (TypeError, ValueError):
+        return error_response("Invalid or missing product ID", status=400)
+
     
-    pass
+    product , sucssess , message = get_product_by_id(product_id)
+    
+    if sucssess:
+        return JsonResponse(product_to_json_serializable(product), safe=False , status=200)
+    
+    return error_response(message, status=404)
+
 def search_product(request) -> JsonResponse:
     """
     View to search products by name.
     """
     
-    pass
+    try:
+        product_token = request.GET.get('search_token', None)
+    except (TypeError, ValueError):
+        return error_response('Invalid or missing search token', status=400)
+
+    
+    products , sucssess , message = search_product_by_token(product_token)
+    
+    if sucssess:
+        serialized_products = [product_to_json_serializable(product) for product in products]
+        return JsonResponse(serialized_products, safe=False , status=200)
+    
+    return error_response(message, status=404)
 
 def unlist_product(request) -> JsonResponse:
     """
-    View to unlisted product.
+    View to unlist a product.
     """
-    
-    pass
+    try:
+        product_id = int(request.GET.get('id', None))
+    except (TypeError, ValueError):
+        return error_response('Invalid or missing product ID', status=400)
+
+    success , message = unlist_product_by_id(product_id)
+
+    if success:
+        return JsonResponse({'message': message}, status=200)
+
+    return error_response(message, status=404)
 
 def delete_product(request) -> JsonResponse:
     """
-    View to delete product.
+    View to delete a product.
     """
-    
-    pass
+    try:
+        product_id = int(request.GET.get('id', None))
+    except (TypeError, ValueError):
+        return error_response('Invalid or missing product ID', status=400)
 
-def add_product(request) -> JsonResponse:
-    """
-    View to add product.
-    """
-    
-    pass
+    success, message = delete_product_by_id(product_id)
 
+    if success:
+        return JsonResponse({'message': message}, status=200)
+
+    return error_response(message, status=404)
+
+@csrf_exempt
+def add_product_view(request) -> JsonResponse:
+    """
+    View to add a product.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST requests allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return error_response('Invalid JSON', status=400)
+
+    success, message = add_product(data.get('product', {}))
+
+    if success:
+        return JsonResponse({'message': message}, status=201)
+
+    return error_response(message, status=400)
+
+@csrf_exempt
 def update_product(request) -> JsonResponse:
     """
     View to update product.
     """
     
-    pass
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST requests allowed'}, status=405)
 
-def get_product_details(request) -> JsonResponse:
-    """
-    View to get details of a specific product.
-    """
-    
-    pass
+    try:
+        data = json.loads(request.body)
+        product_id = int(data.get('id'))
+        product_data = data.get('product', {})
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return error_response('Invalid JSON or missing ID', status=400)
+
+    success, message = update_product_by_id(product_id, product_data)
+
+    if success:
+        return JsonResponse({'message': "Product updated successfully"}, status=200)
+
+    return error_response(message, status=400)
 
 
 #* Authentication Views

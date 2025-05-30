@@ -2,8 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.index, name="index"),
-
     # Product Control
     path("products/", views.list_products, name="list_products"),
     path("products/search/", views.search_product, name="search_product"),
@@ -11,7 +9,7 @@ urlpatterns = [
     path("products/delete/", views.delete_product, name="delete_product"),
     path("products/add/", views.add_product, name="add_product"),
     path("products/update/", views.update_product, name="update_product"),
-    path("products/details/", views.get_product_details, name="get_product_details"),
+    path("products/get/", views.get_product, name="get_product"),
 
     # Authentication
     path("auth/login/", views.login, name="login"),
