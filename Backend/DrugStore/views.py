@@ -5,6 +5,10 @@ from django.views.decorators.csrf import csrf_exempt
 
 from Backend.DrugStore.models import Accounts, Products
 from Backend.DrugStore.util.general import error_response
+from Backend.DrugStore.util.history import (
+    handle_add_to_history,
+    handle_list_user_view_history,
+)
 from Backend.DrugStore.util.product import (
     add_product,
     delete_product_by_id,
@@ -20,6 +24,12 @@ from Backend.DrugStore.util.auth import (
     handle_login,
     handle_admin,
     handle_get_user_info,
+)
+from Backend.DrugStore.util.cart import (
+    handle_add_to_cart,
+    handle_remove_from_cart,
+    handle_list_cart_items,
+    handle_update_cart_item,
 )
 
 # Create your views here.
@@ -269,45 +279,174 @@ def get_user_info(request) -> JsonResponse:
 
 
 # * Cart Control Views
+@csrf_exempt
 def add_to_cart(request) -> JsonResponse:
     """
     View to add product to cart.
+    Expects: { "userid": "<userid>", "product_id": <id>, "quantity": <int> }
     """
 
-    pass
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
+    try:
+        data = json.loads(request.body)
+        userid = data.get("userid")
+        product_id = data.get("product_id")
+        quantity = int(data.get("quantity", 1))
+
+        success, message = handle_add_to_cart(userid, product_id, quantity)
+
+        if not success:
+            return error_response(message, status=400)
+
+        return JsonResponse(
+            {
+                "message": message,
+            },
+            status=200,
+        )
+
+    except json.JSONDecodeError:
+        return error_response("Invalid JSON", status=400)
 
 
+@csrf_exempt
 def remove_from_cart(request) -> JsonResponse:
     """
     View to remove product from cart.
     """
 
-    pass
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
+    try:
+        data = json.loads(request.body)
+        userid = data.get("userid")
+        product_id = data.get("product_id")
+
+        success, message = handle_remove_from_cart(userid, product_id)
+
+        if not success:
+            return error_response(message, status=400)
+
+        return JsonResponse(
+            {
+                "message": message,
+            },
+            status=200,
+        )
+
+    except json.JSONDecodeError:
+        return error_response("Invalid JSON", status=400)
 
 
+@csrf_exempt
 def list_cart(request) -> JsonResponse:
     """
-    View to list all products in the cart.
+    View to list all products in the cart for a user.
+    Expects: { "userid": "<userid>" }
+    """
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
+    try:
+        data = json.loads(request.body)
+        userid = data.get("userid")
+
+        items, success, message = handle_list_cart_items(userid)
+        if not success:
+            return error_response(message, status=400)
+
+        return JsonResponse({"message": message, "cart": items}, status=200)
+
+    except json.JSONDecodeError:
+        return error_response("Invalid JSON", status=400)
+
+
+@csrf_exempt
+def update_cart_quantity(request) -> JsonResponse:
+    """
+    View to update quantity of a cart item.
     """
 
-    pass
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
+    try:
+        data = json.loads(request.body)
+        userid = data.get("userid")
+        product_id = data.get("product_id")
+        quantity = data.get("quantity")
+
+        success, message = handle_update_cart_item(userid, product_id, quantity)
+
+        if not success:
+            return error_response(message, status=400)
+
+        return JsonResponse(
+            {"message": message},
+            status=200,
+        )
+
+    except json.JSONDecodeError:
+        return error_response("Invalid JSON", status=400)
 
 
 # * History Control Views
+
+
+@csrf_exempt
 def list_history(request) -> JsonResponse:
     """
     View to list all products in the history.
     """
 
-    pass
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
+    try:
+        data = json.loads(request.body)
+        userid = data.get("userid")
+
+        items, success, message = handle_list_user_view_history(userid)
+        if not success:
+            return error_response(message, status=400)
+
+        return JsonResponse({"message": message, "history": items}, status=200)
+
+    except json.JSONDecodeError:
+        return error_response("Invalid JSON", status=400)
 
 
+@csrf_exempt
 def add_to_history(request) -> JsonResponse:
     """
     View to add product to history.
     """
 
-    pass
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
+    try:
+        data = json.loads(request.body)
+        userid = data.get("userid")
+        product_id = data.get("product_id")
+
+        success, message = handle_add_to_history(userid, product_id)
+
+        if not success:
+            return error_response(message, status=400)
+
+        return JsonResponse(
+            {
+                "message": message,
+            },
+            status=200,
+        )
+
+    except json.JSONDecodeError:
+        return error_response("Invalid JSON", status=400)
 
 
 # * Payment Control Views
