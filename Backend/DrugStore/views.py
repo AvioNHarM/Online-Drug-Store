@@ -40,7 +40,13 @@ from Backend.DrugStore.util.cart import (
 def list_products(request) -> JsonResponse:
     """
     View to list all products, serialized to JSON.
+
+    Expects:
+        -   No parameters.
+    Returns:
+        -   JsonResponse with a list of products and HTTP status 200.
     """
+
     products = get_product_list()
     serialized_products = [
         product_to_json_serializable(product) for product in products
@@ -51,7 +57,15 @@ def list_products(request) -> JsonResponse:
 def get_product(request) -> JsonResponse:
     """
     View to get details of a specific product.
+
+    Expects query parameters:
+        - ?id=<product_id>
+
+    Returns:
+
+        -   JsonResponse with the product data and status 200 if found, or error JsonResponse with status 400 or 404.
     """
+
     try:
         product_id = int(request.GET.get("id", None))
     except (TypeError, ValueError):
@@ -70,6 +84,13 @@ def get_product(request) -> JsonResponse:
 def search_product(request) -> JsonResponse:
     """
     View to search products by name.
+
+    Expects query parameters:
+        -   ?search_token=<token>
+
+    Returns:
+        -   JsonResponse with a list of matching products and status 200 if found,
+        -   or error JsonResponse with status 400 or 404.
     """
 
     try:
@@ -88,9 +109,17 @@ def search_product(request) -> JsonResponse:
     return error_response(message, status=404)
 
 
+# todo add admin verification for unlisting products
 def unlist_product(request) -> JsonResponse:
     """
     View to unlist a product.
+
+    Expects query parameters:
+        -   ?id=<product_id>
+
+    Returns:
+        -   JsonResponse with success message and status 200,
+        -   or error JsonResponse with status 400 or 404.
     """
     try:
         product_id = int(request.GET.get("id", None))
@@ -105,10 +134,18 @@ def unlist_product(request) -> JsonResponse:
     return error_response(message, status=404)
 
 
+# todo add admin verification for deleting products
 def delete_product(request) -> JsonResponse:
     """
     View to delete a product.
+
+    Expects query parameters: ?id=<product_id>
+
+    Returns:
+        -   JsonResponse with success message and status 200,
+        -   or error JsonResponse with status 400 or 404.
     """
+
     try:
         product_id = int(request.GET.get("id", None))
     except (TypeError, ValueError):
@@ -122,10 +159,26 @@ def delete_product(request) -> JsonResponse:
     return error_response(message, status=404)
 
 
+# todo add admin verification for adding products
 @csrf_exempt
 def add_product_view(request) -> JsonResponse:
     """
     View to add a product.
+
+    Expects JSON body:
+    {
+        "product": {
+            "name": "<str>",
+            "price": <float>,
+            "description": "<str>",
+            "image": "<url or base64>",
+            ...
+        }
+    }
+
+    Returns:
+        -   JsonResponse with success message and status 201 if created,
+        -   or error JsonResponse with status 400.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Only POST requests allowed"}, status=405)
@@ -143,10 +196,24 @@ def add_product_view(request) -> JsonResponse:
     return error_response(message, status=400)
 
 
+# todo add admin verification for updating products
 @csrf_exempt
 def update_product(request) -> JsonResponse:
     """
     View to update product.
+    Expects JSON body:
+    {
+        "id": <product_id>,
+        "product": {
+            "name": "<str>",
+            "price": <float>,
+            ...
+        }
+    }
+
+    Returns:
+        -   JsonResponse with success message and status 200 if updated,
+        -   or error JsonResponse with status 400.
     """
 
     if request.method != "POST":
@@ -174,6 +241,16 @@ def update_product(request) -> JsonResponse:
 def register(request) -> JsonResponse:
     """
     View to handle user registration.
+
+    Expects JSON body:
+    {
+        "email": "<user_email>",
+        "password": "<user_password>"
+    }
+
+    Returns:
+        -   JsonResponse with user ID and success message and status 201 if created,
+        -   or error JsonResponse with status 400.
     """
 
     if request.method != "POST":
@@ -199,6 +276,16 @@ def register(request) -> JsonResponse:
 def login(request) -> JsonResponse:
     """
     View to handle user login.
+
+    Expects JSON body:
+    {
+        "email": "<user_email>",
+        "password": "<user_password>"
+    }
+
+    Returns:
+        -   JsonResponse with user ID and success message and status 200 if successful,
+        -   or error JsonResponse with status 400.
     """
 
     if request.method != "POST":
@@ -224,6 +311,11 @@ def login(request) -> JsonResponse:
 def logout(request) -> JsonResponse:
     """
     View to handle user logout.
+
+    Expects: No parameters.
+
+    Returns:
+        -   JsonResponse with logout message and clears JWT cookie. Status 200.
     """
 
     response = JsonResponse({"message": "Logged out successfully"})
@@ -235,6 +327,15 @@ def logout(request) -> JsonResponse:
 def is_admin(request) -> JsonResponse:
     """
     View to check if the user is an admin.
+
+    Expects JSON body:
+    {
+        "userid": "<user_id>"
+    }
+
+    Returns:
+        -   JsonResponse with admin status and message and status 200,
+        -   or error JsonResponse with status 400.
     """
 
     if request.method != "POST":
@@ -258,8 +359,17 @@ def is_admin(request) -> JsonResponse:
 def get_user_info(request) -> JsonResponse:
     """
     View to retrieve user info based on userid.
-    Expects JSON body: { "userid": "<user-id>" }
+
+    Expects JSON body:
+    {
+        "userid": "<user_id>"
+    }
+
+    Returns:
+        -   JsonResponse with user data and message and status 200,
+        -   or error JsonResponse with status 400.
     """
+
     if request.method != "POST":
         return error_response("Only POST method allowed", status=405)
 
@@ -283,7 +393,16 @@ def get_user_info(request) -> JsonResponse:
 def add_to_cart(request) -> JsonResponse:
     """
     View to add product to cart.
-    Expects: { "userid": "<userid>", "product_id": <id>, "quantity": <int> }
+
+    Expects JSON body:
+    {
+        "userid": "<user_id>",
+        "product_id": <product_id>,
+        "quantity": <int>
+    }
+    Returns:
+        -   JsonResponse with success message and status 200,
+        -   or error JsonResponse with status 400.
     """
 
     if request.method != "POST":
@@ -315,6 +434,16 @@ def add_to_cart(request) -> JsonResponse:
 def remove_from_cart(request) -> JsonResponse:
     """
     View to remove product from cart.
+
+    Expects JSON body:
+    {
+        "userid": "<user_id>",
+        "product_id": <product_id>
+    }
+
+    Returns:
+        -   JsonResponse with success message and status 200,
+        -   or error JsonResponse with status 400.
     """
 
     if request.method != "POST":
@@ -345,8 +474,17 @@ def remove_from_cart(request) -> JsonResponse:
 def list_cart(request) -> JsonResponse:
     """
     View to list all products in the cart for a user.
-    Expects: { "userid": "<userid>" }
+
+    Expects JSON body:
+    {
+        "userid": "<user_id>"
+    }
+
+    Returns:
+        -   JsonResponse with list of cart items and status 200,
+        -   or error JsonResponse with status 400.
     """
+
     if request.method != "POST":
         return error_response("Only POST method allowed", status=405)
 
@@ -368,6 +506,17 @@ def list_cart(request) -> JsonResponse:
 def update_cart_quantity(request) -> JsonResponse:
     """
     View to update quantity of a cart item.
+
+    Expects JSON body:
+    {
+        "userid": "<user_id>",
+        "product_id": <product_id>,
+        "quantity": <int>
+    }
+
+    Returns:
+        -   JsonResponse with success message and status 200,
+        -   or error JsonResponse with status 400.
     """
 
     if request.method != "POST":
@@ -399,7 +548,16 @@ def update_cart_quantity(request) -> JsonResponse:
 @csrf_exempt
 def list_history(request) -> JsonResponse:
     """
-    View to list all products in the history.
+    View to list all products in the history for a user.
+
+    Expects JSON body:
+    {
+        "userid": "<user_id>"
+    }
+
+    Returns:
+        -   JsonResponse with list of viewed products and status 200 if successful,
+        -   or error JsonResponse with status 400 or 405.
     """
 
     if request.method != "POST":
@@ -422,7 +580,16 @@ def list_history(request) -> JsonResponse:
 @csrf_exempt
 def add_to_history(request) -> JsonResponse:
     """
-    View to add product to history.
+    View to add a product to a user's history.
+
+    Expects a POST request with JSON payload containing:
+        - 'userid': the ID of the user
+        - 'product_id': the ID of the product to add to history
+
+    Returns:
+        - 200 OK with a success message if the product is added successfully.
+        - 400 Bad Request with an error message if input is invalid or the action fails.
+        - 405 Method Not Allowed if the request is not a POST.
     """
 
     if request.method != "POST":
