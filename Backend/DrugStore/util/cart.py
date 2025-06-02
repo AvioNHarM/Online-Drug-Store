@@ -1,4 +1,4 @@
-from Backend.DrugStore.models import Accounts, CartItem, Products
+from DrugStore.models import Accounts, CartItem, Products
 
 
 def handle_add_to_cart(userid: str, product_id: int, quantity: int) -> tuple[bool, str]:

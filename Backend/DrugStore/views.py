@@ -3,13 +3,13 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from Backend.DrugStore.models import Accounts, Products
-from Backend.DrugStore.util.general import error_response
-from Backend.DrugStore.util.history import (
+from DrugStore.models import Accounts, Products
+from DrugStore.util.general import error_response
+from DrugStore.util.history import (
     handle_add_to_history,
     handle_list_user_view_history,
 )
-from Backend.DrugStore.util.product import (
+from DrugStore.util.product import (
     add_product,
     delete_product_by_id,
     get_product_by_id,
@@ -19,13 +19,13 @@ from Backend.DrugStore.util.product import (
     unlist_product_by_id,
     update_product_by_id,
 )
-from Backend.DrugStore.util.auth import (
+from DrugStore.util.auth import (
     handle_register,
     handle_login,
     handle_admin,
     handle_get_user_info,
 )
-from Backend.DrugStore.util.cart import (
+from DrugStore.util.cart import (
     handle_add_to_cart,
     handle_remove_from_cart,
     handle_list_cart_items,
@@ -81,6 +81,7 @@ def get_product(request) -> JsonResponse:
     return error_response(message, status=404)
 
 
+# todo fix search algo
 def search_product(request) -> JsonResponse:
     """
     View to search products by name.
@@ -526,7 +527,7 @@ def update_cart_quantity(request) -> JsonResponse:
         data = json.loads(request.body)
         userid = data.get("userid")
         product_id = data.get("product_id")
-        quantity = data.get("quantity")
+        quantity = int(data.get("quantity"))
 
         success, message = handle_update_cart_item(userid, product_id, quantity)
 

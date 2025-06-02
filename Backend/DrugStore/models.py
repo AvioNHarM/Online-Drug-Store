@@ -42,6 +42,12 @@ class Accounts(models.Model):
 
 
 class Products(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+    )
     name = models.CharField(max_length=200)
     description = models.TextField()
     price = models.FloatField()

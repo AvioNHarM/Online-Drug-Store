@@ -1,5 +1,5 @@
-from datetime import timezone
-from Backend.DrugStore.models import Accounts, Products, UserViewHistory
+from django.utils import timezone
+from DrugStore.models import Accounts, Products, UserViewHistory
 
 
 def handle_list_user_view_history(

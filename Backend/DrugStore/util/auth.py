@@ -1,4 +1,4 @@
-from ..models import Accounts
+from DrugStore.models import Accounts
 
 
 def handle_register(email: str, password: str) -> tuple[Accounts, bool, str]:
@@ -50,7 +50,7 @@ def handle_admin(userid: str) -> tuple[bool, str]:
     if not account:
         return False, "User does not exist"
 
-    if not account.is_admin:
+    if not account.isAdmin:
         return False, "User is not an admin"
 
     return True, "User is an admin"
