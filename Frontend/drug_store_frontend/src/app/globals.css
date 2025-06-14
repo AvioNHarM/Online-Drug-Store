@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.hero-bg-image {
+  background-image: url("https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80");
+}
+
+:root {
+  --duo-green: #58cc02;
+  --duo-dark-green: #58a700;
+  --duo-blue: #1899d6;
+  --duo-dark-blue: #147ab3;
+  --duo-yellow: #ffc107; /* For accents or highlights */
+  --duo-text-dark: #3c3c3c;
+  --duo-text-light: #ffffff;
+  --duo-gray-background: #f7f7f7;
+  --duo-border-light: #e5e5e5;
+}
