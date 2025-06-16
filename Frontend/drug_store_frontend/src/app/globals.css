@@ -40,3 +40,84 @@ body {
   --duo-gray-background: #f7f7f7;
   --duo-border-light: #e5e5e5;
 }
+
+        :root {
+          --primary-color: #e53e3e;
+          --secondary-color: #1a202c;
+          --accent-color: #fed7d7;
+          --text-primary: #1a202c;
+          --text-secondary: #974e4e;
+          --background-light: #fef2f2;
+          --background-card: #ffffff;
+          
+        }
+
+        body {
+          font-family: "Lexend", "Noto Sans", sans-serif;
+        }
+
+        .hero-bg-image {
+          background: #545353; /* or any other shade of gray you prefer */
+        }
+
+        .gradient-text {
+          background: linear-gradient(to right, var(--primary-color), #c53030);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .hover-lift {
+          transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+        }
+
+        .hover-lift:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .smooth-scroll {
+          scroll-behavior: smooth;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-slideInUp {
+          animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        .icon-container {
+          background-color: var(--primary-color);
+          color: white;
+          padding: 12px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 12px;
+        }
+      
+
