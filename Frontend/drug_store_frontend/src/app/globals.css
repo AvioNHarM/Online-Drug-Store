@@ -1,17 +1,43 @@
 @import "tailwindcss";
 
+/* === Root Variables === */
 :root {
+  /* Color Scheme */
   --background: #ffffff;
   --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Duolingo-inspired palette */
+  --duo-green: #58cc02;
+  --duo-dark-green: #58a700;
+  --duo-blue: #1899d6;
+  --duo-dark-blue: #147ab3;
+  --duo-yellow: #ffc107;
+  --duo-text-dark: #3c3c3c;
+  --duo-text-light: #ffffff;
+  --duo-gray-background: #f7f7f7;
+  --duo-border-light: #e5e5e5;
+
+  /* Custom Theme Colors */
+  --primary-color: #e53e3e;
+  --secondary-color: #1a202c;
+  --accent-color: #fed7d7;
+  --text-primary: #1a202c;
+  --text-secondary: #974e4e;
+  --background-light: #fef2f2;
+  --background-card: #ffffff;
+  --soft-text: #6B7280;
+
+  --secondary-color-button: #F87171;
+  --bg-light: #F9FAFB;
+  --bg-input: #F3F4F6;
+  --border-color: #E5E7EB;
+
+  /* Fonts (for @theme use) */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* === Dark Mode Override === */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -19,105 +45,98 @@
   }
 }
 
+/* === Theme Inline (Tailwind CSS custom properties) === */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* === Base Styles === */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Lexend", "Noto Sans", Arial, Helvetica, sans-serif;
 }
 
+/* === Utility Classes === */
+
+/* Background Image */
 .hero-bg-image {
   background-image: url("https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80");
+  background-size: cover;
+  background-position: center;
 }
 
-:root {
-  --duo-green: #58cc02;
-  --duo-dark-green: #58a700;
-  --duo-blue: #1899d6;
-  --duo-dark-blue: #147ab3;
-  --duo-yellow: #ffc107; /* For accents or highlights */
-  --duo-text-dark: #3c3c3c;
-  --duo-text-light: #ffffff;
-  --duo-gray-background: #f7f7f7;
-  --duo-border-light: #e5e5e5;
+/* Override image background for alt option */
+.hero-bg-image.alt {
+  background-color: #545353;
 }
 
-        :root {
-          --primary-color: #e53e3e;
-          --secondary-color: #1a202c;
-          --accent-color: #fed7d7;
-          --text-primary: #1a202c;
-          --text-secondary: #974e4e;
-          --background-light: #fef2f2;
-          --background-card: #ffffff;
-          
-        }
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(to right, var(--primary-color), #c53030);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-        body {
-          font-family: "Lexend", "Noto Sans", sans-serif;
-        }
+/* Hover Lift Effect */
+.hover-lift {
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
 
-        .hero-bg-image {
-          background: #545353; /* or any other shade of gray you prefer */
-        }
+/* Smooth Scrolling */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
 
-        .gradient-text {
-          background: linear-gradient(to right, var(--primary-color), #c53030);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
+/* === Animations === */
 
-        .hover-lift {
-          transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
-        }
+/* Fade In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
 
-        .hover-lift:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
+/* Slide In Up */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slideInUp {
+  animation: slideInUp 0.6s ease-out forwards;
+}
 
-        .smooth-scroll {
-          scroll-behavior: smooth;
-        }
+/* Icon Container */
+.icon-container {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
 
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-slideInUp {
-          animation: slideInUp 0.6s ease-out forwards;
-        }
-
-        .icon-container {
-          background-color: var(--primary-color);
-          color: white;
-          padding: 12px;
-          border-radius: 50%;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 12px;
-        }
-      
 
