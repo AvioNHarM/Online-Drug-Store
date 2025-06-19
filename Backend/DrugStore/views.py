@@ -112,67 +112,108 @@ def search_product(request) -> JsonResponse:
     return error_response(message, status=404)
 
 
-# todo add admin verification for unlisting products
+@csrf_exempt
 def unlistNlist_product(request) -> JsonResponse:
     """
-    View to unlist a product.
+    View to toggle a product's listing status (listed/unlisted).
 
-    Expects query parameters:
-        -   ?id=<product_id>
+    Expects JSON body:
+        {
+            "id": "<product_id>",
+            "userid": "<admin_user_id>"
+        }
 
     Returns:
-        -   JsonResponse with success message and status 200,
-        -   or error JsonResponse with status 400 or 404.
+        - JsonResponse with success message and status 200,
+        - or error JsonResponse with status 400 or 403 or 404.
     """
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
     try:
-        product_id = uuid.UUID(request.GET.get("id", None))
-    except (TypeError, ValueError):
-        return error_response("Invalid or missing product ID", status=400)
+        data = json.loads(request.body)
+        product_id = uuid.UUID(data.get("id"))
+        userid = data.get("userid")
+    except (TypeError, ValueError, json.JSONDecodeError, AttributeError):
+        return error_response("Invalid or missing parameters", status=400)
+
+    is_admin, message = handle_admin(userid)
+    if not is_admin:
+        return error_response("Unauthorized: Admin access required", status=403)
 
     success, message = unlistNlist_product_by_id(product_id)
-
     if success:
         return JsonResponse({"message": message}, status=200)
 
     return error_response(message, status=404)
 
 
-# todo add admin verification for deleting products
+@csrf_exempt
 def delete_product(request) -> JsonResponse:
     """
     View to delete a product.
 
-    Expects query parameters: ?id=<product_id>
+    Expects JSON body:
+        {
+            "id": "<product_id>",
+            "userid": "<admin_user_id>"
+        }
 
     Returns:
-        -   JsonResponse with success message and status 200,
-        -   or error JsonResponse with status 400 or 404.
+        - JsonResponse with success message and status 200,
+        - or error JsonResponse with status 400 or 403 or 404.
     """
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
 
     try:
-        product_id = uuid.UUID(request.GET.get("id", None))
-    except (TypeError, ValueError):
-        return error_response("Invalid or missing product ID", status=400)
+        data = json.loads(request.body)
+        product_id = uuid.UUID(data.get("id"))
+        userid = data.get("userid")
+    except (TypeError, ValueError, json.JSONDecodeError, AttributeError):
+        return error_response("Invalid or missing parameters", status=400)
+
+    is_admin, message = handle_admin(userid)
+    if not is_admin:
+        return error_response("Unauthorized: Admin access required", status=403)
 
     success, message = delete_product_by_id(product_id)
-
     if success:
         return JsonResponse({"message": message}, status=200)
 
     return error_response(message, status=404)
 
 
-# todo add admin verification for adding products
 @csrf_exempt
-def add_product_view(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Only POST requests allowed"}, status=405)
+def add_product_view(request) -> JsonResponse:
+    """
+    View to add a new product.
 
-    if request.content_type.startswith("multipart/form-data"):
-        product_data = request.POST
-        image_file = request.FILES.get("img")
-    else:
-        return JsonResponse({"error": "Expected multipart form data"}, status=400)
+    Expects multipart form data:
+        - name: <str>
+        - price: <float>
+        - description: <str>
+        - tags: <comma-separated str>
+        - img: <file>
+        - userid: <admin_user_id>
+
+    Returns:
+        - JsonResponse with success message and status 201 if added,
+        - or error JsonResponse with status 400 or 403.
+    """
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
+    if not request.content_type.startswith("multipart/form-data"):
+        return error_response("Expected multipart form data", status=400)
+
+    product_data = request.POST
+    image_file = request.FILES.get("img")
+
+    userid = product_data.get("userid")
+    is_admin, message = handle_admin(userid)
+    if not is_admin:
+        return error_response("Unauthorized: Admin access required", status=403)
 
     data = {
         "name": product_data.get("name"),
@@ -186,42 +227,47 @@ def add_product_view(request):
     if success:
         return JsonResponse({"message": message}, status=201)
 
-    return JsonResponse({"error": message}, status=400)
+    return error_response(message, status=400)
 
 
-# todo add admin verification for updating products
 @csrf_exempt
 def update_product(request) -> JsonResponse:
     """
-    View to update product.
+    View to update an existing product.
+
     Expects JSON body:
-    {
-        "id": <product_id>,
-        "product": {
-            "name": "<str>",
-            "price": <float>,
-            ...
+        {
+            "id": "<product_id>",
+            "userid": "<admin_user_id>",
+            "product": {
+                "name": "<str>",
+                "price": <float>,
+                "description": "<str>",
+                "img": "<url or null>",
+                "tags": [<str> or comma-separated string]
+            }
         }
-    }
 
     Returns:
-        -   JsonResponse with success message and status 200 if updated,
-        -   or error JsonResponse with status 400.
+        - JsonResponse with success message and status 200 if updated,
+        - or error JsonResponse with status 400 or 403.
     """
-
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST requests allowed"}, status=405)
+        return error_response("Only POST method allowed", status=405)
 
     try:
         data = json.loads(request.body)
-        product_id_str = data.get("id")
-        product_id = uuid.UUID(product_id_str)
+        product_id = uuid.UUID(data.get("id"))
+        userid = data.get("userid")
         product_data = data.get("product", {})
     except (json.JSONDecodeError, TypeError, ValueError, AttributeError):
-        return error_response("Invalid JSON or missing ID", status=400)
+        return error_response("Invalid JSON or missing parameters", status=400)
+
+    is_admin, message = handle_admin(userid)
+    if not is_admin:
+        return error_response("Unauthorized: Admin access required", status=403)
 
     success, message = update_product_by_id(product_id, product_data)
-
     if success:
         return JsonResponse({"message": "Product updated successfully"}, status=200)
 

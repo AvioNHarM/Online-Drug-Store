@@ -8,46 +8,71 @@ export async function fetchProducts(): Promise<Product[]> {
   return res.json();
 }
 
-export async function addProduct(product: ProductForm) {
+export async function addProduct(product: ProductForm, userid: string) {
+  const formData = new FormData();
+  formData.append("name", product.name);
+  formData.append("price", product.price.toString());
+  formData.append("description", product.description);
+  formData.append("tags", product.tags);
+  formData.append("userid", userid);
+  if (product.img) {
+    formData.append("img", product.img); // should be a File or Blob
+  }
+
   const res = await fetch(`${BASE_URL}/add/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ product }),
+    body: formData,
   });
+
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error || err.message || "Add product failed");
   }
+
   return res.json();
 }
 
-export async function updateProduct(id: string, product: ProductForm) {
+export async function updateProduct(id: string, product: ProductForm, userid: string) {
   const res = await fetch(`${BASE_URL}/update/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, product }),
+    body: JSON.stringify({ id, userid, product }),
   });
+
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error || err.message || "Update product failed");
   }
+
   return res.json();
 }
 
-export async function toggleListedStatus(id: string) {
-  const res = await fetch(`${BASE_URL}/unlistNlist/?id=${id}`);
+export async function toggleListedStatus(id: string, userid: string) {
+  const res = await fetch(`${BASE_URL}/unlistNlist/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, userid }),
+  });
+
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error || err.message || "Toggle listed status failed");
   }
+
   return res.json();
 }
 
-export async function deleteProduct(id: string) {
-  const res = await fetch(`${BASE_URL}/delete/?id=${id}`);
+export async function deleteProduct(id: string, userid: string) {
+  const res = await fetch(`${BASE_URL}/delete/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, userid }),
+  });
+
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error || err.message || "Delete product failed");
   }
+
   return res.json();
 }
