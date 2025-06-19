@@ -24,6 +24,10 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?display=swap&family=Lexend:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;700;900"
         />
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+          rel="stylesheet"
+        />
       </head>
       <body
         className="antialiased"
