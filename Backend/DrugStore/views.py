@@ -2,6 +2,8 @@ import json
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import uuid
+
 
 from DrugStore.models import Accounts, Products
 from DrugStore.util.general import error_response
@@ -16,7 +18,7 @@ from DrugStore.util.product import (
     get_product_list,
     product_to_json_serializable,
     search_product_by_token,
-    unlist_product_by_id,
+    unlistNlist_product_by_id,
     update_product_by_id,
 )
 from DrugStore.util.auth import (
@@ -111,7 +113,7 @@ def search_product(request) -> JsonResponse:
 
 
 # todo add admin verification for unlisting products
-def unlist_product(request) -> JsonResponse:
+def unlistNlist_product(request) -> JsonResponse:
     """
     View to unlist a product.
 
@@ -123,11 +125,11 @@ def unlist_product(request) -> JsonResponse:
         -   or error JsonResponse with status 400 or 404.
     """
     try:
-        product_id = int(request.GET.get("id", None))
+        product_id = uuid.UUID(request.GET.get("id", None))
     except (TypeError, ValueError):
         return error_response("Invalid or missing product ID", status=400)
 
-    success, message = unlist_product_by_id(product_id)
+    success, message = unlistNlist_product_by_id(product_id)
 
     if success:
         return JsonResponse({"message": message}, status=200)
@@ -148,7 +150,7 @@ def delete_product(request) -> JsonResponse:
     """
 
     try:
-        product_id = int(request.GET.get("id", None))
+        product_id = uuid.UUID(request.GET.get("id", None))
     except (TypeError, ValueError):
         return error_response("Invalid or missing product ID", status=400)
 
@@ -162,39 +164,29 @@ def delete_product(request) -> JsonResponse:
 
 # todo add admin verification for adding products
 @csrf_exempt
-def add_product_view(request) -> JsonResponse:
-    """
-    View to add a product.
-
-    Expects JSON body:
-    {
-        "product": {
-            "name": "<str>",
-            "price": <float>,
-            "description": "<str>",
-            "image": "<url or base64>",
-            ...
-        }
-    }
-
-    Returns:
-        -   JsonResponse with success message and status 201 if created,
-        -   or error JsonResponse with status 400.
-    """
+def add_product_view(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST requests allowed"}, status=405)
 
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return error_response("Invalid JSON", status=400)
+    if request.content_type.startswith("multipart/form-data"):
+        product_data = request.POST
+        image_file = request.FILES.get("img")
+    else:
+        return JsonResponse({"error": "Expected multipart form data"}, status=400)
 
-    success, message = add_product(data.get("product", {}))
+    data = {
+        "name": product_data.get("name"),
+        "price": product_data.get("price"),
+        "description": product_data.get("description"),
+        "tags": product_data.get("tags", ""),
+        "img": image_file,
+    }
 
+    success, message = add_product(data)
     if success:
         return JsonResponse({"message": message}, status=201)
 
-    return error_response(message, status=400)
+    return JsonResponse({"error": message}, status=400)
 
 
 # todo add admin verification for updating products
@@ -222,9 +214,10 @@ def update_product(request) -> JsonResponse:
 
     try:
         data = json.loads(request.body)
-        product_id = int(data.get("id"))
+        product_id_str = data.get("id")
+        product_id = uuid.UUID(product_id_str)
         product_data = data.get("product", {})
-    except (json.JSONDecodeError, TypeError, ValueError):
+    except (json.JSONDecodeError, TypeError, ValueError, AttributeError):
         return error_response("Invalid JSON or missing ID", status=400)
 
     success, message = update_product_by_id(product_id, product_data)

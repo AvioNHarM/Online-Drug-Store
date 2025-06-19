@@ -1,10 +1,99 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../../../lib/components/navbar";
 import Head from "next/head";
 
+import { Product, ProductForm } from "../../../lib/util/types";
+import {
+  addProduct,
+  deleteProduct,
+  fetchProducts,
+  toggleListedStatus,
+  updateProduct,
+} from "../../../lib/api/product";
+
 export default function ProductManagementPage() {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editProductId, setEditProductId] = useState<string | null>(null);
+  const [productForm, setProductForm] = useState<ProductForm>({
+    name: "",
+    price: "",
+    description: "",
+    img: "",
+    tags: "",
+  });
+  const [products, setProducts] = useState<Product[]>([]);
+
+  const loadProducts = async () => {
+    try {
+      const data = await fetchProducts();
+      setProducts(data);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const handleSubmitProduct = async () => {
+    try {
+      if (editProductId) {
+        await updateProduct(editProductId, productForm);
+        alert("Product updated successfully");
+      } else {
+        await addProduct(productForm);
+        alert("Product added successfully");
+      }
+      setShowAddForm(false);
+      setEditProductId(null);
+      setProductForm({
+        name: "",
+        price: "",
+        description: "",
+        img: "",
+        tags: "",
+      });
+      loadProducts();
+    } catch (err: any) {
+      alert(err.message || "Failed to submit product");
+    }
+  };
+
+  const startEdit = (product: Product) => {
+    setEditProductId(product.id);
+    setProductForm({
+      name: product.name,
+      price: product.price.toString(),
+      description: product.description,
+      img: product.img || "",
+      tags: product.tags.join(", "),
+    });
+    setShowAddForm(true);
+  };
+
+  const handleToggleListed = async (product: Product) => {
+    try {
+      await toggleListedStatus(product.id);
+      loadProducts();
+    } catch (err: any) {
+      alert(err.message || "Failed to toggle listed status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    try {
+      await deleteProduct(id);
+      alert("Product deleted successfully");
+      loadProducts();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete product");
+    }
+  };
+
   return (
     <>
       <Head>
@@ -18,54 +107,101 @@ export default function ProductManagementPage() {
         <Navbar />
         <main className="px-4 sm:px-6 lg:px-8 flex flex-1 justify-center py-8">
           <div className="layout-content-container flex flex-col w-full max-w-7xl">
+            {/* Header and toggle add/edit form button */}
             <div className="flex flex-wrap justify-between items-center gap-4 mb-6 p-4 bg-[var(--background-card)] rounded-lg shadow">
               <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
                 Product Management
               </h1>
-              <button className="btn-primary flex items-center gap-2 py-2 px-4 rounded-lg text-sm font-medium shadow-sm">
+              <button
+                className="btn-primary flex items-center gap-2 py-2 px-4 rounded-lg text-sm font-medium shadow-sm"
+                onClick={() => {
+                  setShowAddForm(!showAddForm);
+                  setEditProductId(null);
+                  setProductForm({
+                    name: "",
+                    price: "",
+                    description: "",
+                    img: "",
+                    tags: "",
+                  });
+                }}
+              >
                 <span className="material-icons-outlined text-lg">
-                  add_circle_outline
+                  {showAddForm ? "close" : "add_circle_outline"}
                 </span>
-                <span className="truncate">Add Product</span>
+                <span className="truncate">
+                  {showAddForm ? "Cancel" : "Add Product"}
+                </span>
               </button>
             </div>
 
-            <div className="mb-6 p-4 bg-[var(--bg-light)] rounded-lg shadow">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="relative md:col-span-2">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="material-icons-outlined text-gray-400">
-                      search
-                    </span>
-                  </div>
+            {/* Add/Edit form */}
+            {showAddForm && (
+              <div className="mb-6 p-4 bg-white rounded-lg shadow animate-fadeIn">
+                <h2 className="text-lg font-semibold mb-4">
+                  {editProductId ? "Edit Product" : "New Product"}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
-                    type="search"
-                    className="form-input pl-10 pr-4 py-2.5 text-sm w-full"
-                    placeholder="Search products by name, category..."
+                    type="text"
+                    placeholder="Product Name"
+                    className="form-input w-full"
+                    value={productForm.name}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, name: e.target.value })
+                    }
+                  />
+                  <input
+                    type="number"
+                    placeholder="Price"
+                    className="form-input w-full"
+                    value={productForm.price}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, price: e.target.value })
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder="Image URL"
+                    className="form-input w-full"
+                    value={productForm.img}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, img: e.target.value })
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder="Tags (comma-separated)"
+                    className="form-input w-full"
+                    value={productForm.tags}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, tags: e.target.value })
+                    }
+                  />
+                  <textarea
+                    placeholder="Description"
+                    className="form-textarea w-full col-span-1 md:col-span-2"
+                    value={productForm.description}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        description: e.target.value,
+                      })
+                    }
                   />
                 </div>
-                <select
-                  className="form-select px-3 py-2.5 text-sm w-full bg-white border border-[var(--border-color)] rounded-md"
-                  aria-label="Filter by category"
-                >
-                  <option defaultValue="">All Categories</option>
-                  <option>Pain Relief</option>
-                  <option>First Aid</option>
-                  <option>Cold &amp; Flu</option>
-                  <option>Supplements</option>
-                  <option>Skincare</option>
-                </select>
-                <select
-                  className="form-select px-3 py-2.5 text-sm w-full bg-white border border-[var(--border-color)] rounded-md"
-                  aria-label="Filter by status"
-                >
-                  <option defaultValue="">All Statuses</option>
-                  <option>Active</option>
-                  <option>Unlisted</option>
-                </select>
+                <div className="mt-4">
+                  <button
+                    className="btn-primary px-4 py-2 rounded-lg text-sm font-medium"
+                    onClick={handleSubmitProduct}
+                  >
+                    {editProductId ? "Update Product" : "Submit Product"}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
+            {/* Product Table */}
             <div className="bg-[var(--background-card)] shadow-lg rounded-lg overflow-x-auto">
               <table className="min-w-full divide-y divide-[var(--border-color)]">
                 <thead className="bg-gray-50">
@@ -77,105 +213,74 @@ export default function ProductManagementPage() {
                         title="Select product"
                       />
                     </th>
-                    <th className="table-header-cell">Product Name</th>
-                    <th className="table-header-cell">Category</th>
+                    <th className="table-header-cell">Name</th>
                     <th className="table-header-cell">Price</th>
-                    <th className="table-header-cell">Stock</th>
-                    <th className="table-header-cell">Status</th>
+                    <th className="table-header-cell">Listed</th>
+                    <th className="table-header-cell">Tags</th>
+                    <th className="table-header-cell">Created</th>
                     <th className="table-header-cell text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-[var(--border-color)]">
-                  {[
-                    {
-                      name: "Aspirin 500mg",
-                      category: "Pain Relief",
-                      price: "$5.99",
-                      stock: 150,
-                      status: "Active",
-                    },
-                    {
-                      name: "Band-Aids (Pack of 20)",
-                      category: "First Aid",
-                      price: "$3.49",
-                      stock: 200,
-                      status: "Active",
-                    },
-                    {
-                      name: "Cough Syrup",
-                      category: "Cold & Flu",
-                      price: "$8.75",
-                      stock: 80,
-                      status: "Active",
-                    },
-                    {
-                      name: "Multivitamins",
-                      category: "Supplements",
-                      price: "$12.50",
-                      stock: 120,
-                      status: "Unlisted",
-                    },
-                    {
-                      name: "Sunscreen SPF 30",
-                      category: "Skincare",
-                      price: "$10.20",
-                      stock: 90,
-                      status: "Active",
-                    },
-                  ].map((product, i) => (
-                    <tr key={i}>
-                      <td className="table-body-cell px-3 py-4 text-center">
+                  {products.map((product) => (
+                    <tr key={product.id}>
+                      <td className="table-body-cell text-center">
                         <input
                           type="checkbox"
                           className="form-checkbox h-4 w-4 rounded"
-                          title="Select product"
+                          title={`${product.name} selection`}
                         />
                       </td>
-                      <td className="table-body-cell font-medium text-[var(--text-primary)]">
+                      <td className="table-body-cell font-medium">
                         {product.name}
                       </td>
-                      <td className="table-body-cell">{product.category}</td>
-                      <td className="table-body-cell">{product.price}</td>
-                      <td className="table-body-cell">{product.stock}</td>
+                      <td className="table-body-cell">
+                        ${product.price.toFixed(2)}
+                      </td>
                       <td className="table-body-cell">
                         <span
                           className={
-                            product.status === "Active"
-                              ? "status-active"
-                              : "status-unlisted"
+                            product.listed
+                              ? "text-green-600"
+                              : "text-yellow-600"
                           }
                         >
-                          {product.status}
+                          {product.listed ? "Active" : "Unlisted"}
                         </span>
+                      </td>
+                      <td className="table-body-cell">
+                        {product.tags.join(", ")}
+                      </td>
+                      <td className="table-body-cell">
+                        {new Date(product.created_at).toLocaleDateString()}
                       </td>
                       <td className="table-body-cell text-center space-x-1">
                         <button
                           title="Edit"
                           className="p-1 text-blue-600 hover:text-blue-800 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                          onClick={() => startEdit(product)}
                         >
                           <span className="material-icons-outlined text-base">
                             edit
                           </span>
                         </button>
                         <button
-                          title={
-                            product.status === "Unlisted" ? "List" : "Unlist"
-                          }
+                          title={product.listed ? "Unlist" : "List"}
                           className={`p-1 rounded-md hover:bg-opacity-20 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                            product.status === "Unlisted"
+                            product.listed
                               ? "text-green-600 hover:text-green-800 hover:bg-green-100 focus:ring-green-500"
                               : "text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 focus:ring-yellow-500"
                           }`}
+                          onClick={() => handleToggleListed(product)}
                         >
                           <span className="material-icons-outlined text-base">
-                            {product.status === "Unlisted"
-                              ? "toggle_on"
-                              : "toggle_off"}
+                            {product.listed ? "toggle_on" : "toggle_off"}
                           </span>
                         </button>
                         <button
                           title="Delete"
                           className="p-1 text-red-600 hover:text-red-800 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500"
+                          onClick={() => handleDelete(product.id)}
                         >
                           <span className="material-icons-outlined text-base">
                             delete
@@ -186,22 +291,6 @@ export default function ProductManagementPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-
-            <div className="mt-6 flex justify-between items-center p-4 bg-[var(--background-card)] rounded-lg shadow">
-              <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">1</span> to{" "}
-                <span className="font-medium">5</span> of{" "}
-                <span className="font-medium">20</span> results
-              </p>
-              <div className="flex gap-1">
-                <button className="px-3 py-1.5 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--primary-color)]">
-                  Previous
-                </button>
-                <button className="px-3 py-1.5 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--primary-color)]">
-                  Next
-                </button>
-              </div>
             </div>
           </div>
         </main>

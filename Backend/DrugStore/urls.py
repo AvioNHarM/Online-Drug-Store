@@ -5,7 +5,7 @@ urlpatterns = [
     # Product Control
     path("products/", views.list_products, name="list_products"),
     path("products/search/", views.search_product, name="search_product"),
-    path("products/unlist/", views.unlist_product, name="unlist_product"),
+    path("products/unlistNlist/", views.unlistNlist_product, name="unlistNlist"),
     path("products/delete/", views.delete_product, name="delete_product"),
     path("products/add/", views.add_product_view, name="add_product"),
     path("products/update/", views.update_product, name="update_product"),

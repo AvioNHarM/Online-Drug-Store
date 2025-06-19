@@ -1,3 +1,4 @@
+import uuid
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from DrugStore.models import Products
@@ -26,7 +27,7 @@ def get_product_list() -> list[Products]:
     return list(Products.objects.all().order_by("-created_at"))
 
 
-def get_product_by_id(product_id: int) -> tuple[Products | None, bool, str]:
+def get_product_by_id(product_id: uuid.UUID) -> tuple[Products | None, bool, str]:
     """Function to get a product by its ID."""
 
     try:
@@ -39,18 +40,21 @@ def get_product_by_id(product_id: int) -> tuple[Products | None, bool, str]:
         return (None, False, "Product was not found with the given ID")
 
 
-def unlist_product_by_id(product_id: int) -> tuple[bool, str]:
+def unlistNlist_product_by_id(product_id: uuid.UUID) -> tuple[bool, str]:
     """Function to unlist a product by its ID."""
 
     product, sucssess, message = get_product_by_id(product_id)
     if sucssess:
-        product.listed = False
+        product.listed = not product.listed
         product.save()
-        return True, "Product was successfully unlisted"
+        return (
+            True,
+            f"Product was successfully {'listed' if product.listed else 'unlisted'}",
+        )
     return False, message
 
 
-def delete_product_by_id(product_id: int) -> tuple[bool, str]:
+def delete_product_by_id(product_id: uuid.UUID) -> tuple[bool, str]:
     """Function to delete a product by its ID."""
 
     product, sucssess, message = get_product_by_id(product_id)
