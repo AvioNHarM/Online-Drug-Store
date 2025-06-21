@@ -12,9 +12,9 @@ urlpatterns = [
     path("products/get/", views.get_product, name="get_product"),
     # Authentication
     path("auth/login/", views.login, name="login"),
-    path("auth/logout/", views.logout, name="logout"),
     path("auth/register/", views.register, name="register"),
     path("auth/is_admin/", views.is_admin, name="is_admin"),
+    path("auth/user_info/", views.get_user_info, name="get_user_info"),
     # Cart Control
     path("cart/add/", views.add_to_cart, name="add_to_cart"),
     path("cart/remove/", views.remove_from_cart, name="remove_from_cart"),

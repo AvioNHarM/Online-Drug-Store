@@ -3,8 +3,28 @@
 import Image from "next/image";
 import Button from "../../../lib/components/ui/button";
 import Navbar from "../../../lib/components/navbar";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function CartPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session) {
+      router.push("/auth/login");
+    }
+  }, [session, status, router]);
+
+  if (status === "loading" || !session) {
+    return (
+      <p className="text-center pt-20 text-lg text-gray-600">Loading...</p>
+    );
+  }
+
   const cartItems = [
     {
       id: 1,

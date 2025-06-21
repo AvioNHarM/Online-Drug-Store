@@ -1,16 +1,20 @@
+"use client";
+
 import React, { useState } from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import Button from "./ui/button";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return null;
+  }
 
   return (
     <>
-      <link
-        href="https://fonts.googleapis.com/icon?family=Material+Icons"
-        rel="stylesheet"
-      />
       <header className="sticky top-0 z-50 bg-gray-100/90 backdrop-blur-md shadow-sm flex items-center justify-between whitespace-nowrap px-6 md:px-10 py-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -59,8 +63,35 @@ const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button variant="primary">Sign Up</Button>
-          <Button variant="secondary">Log In</Button>
+          {!session ? (
+            <>
+              <Link href="/auth/signup">
+                <Button variant="primary">Sign Up</Button>
+              </Link>
+              <Link href="/auth/login">
+                <Button variant="secondary">Log In</Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/cart">
+                <Button
+                  style={{
+                    backgroundColor: "var(--primary-color)", // red bg
+                    color: "white",
+                  }}
+                >
+                  Cart
+                </Button>
+              </Link>
+              <Button
+                variant="secondary"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
+                Log Out
+              </Button>
+            </>
+          )}
           <button
             className="md:hidden text-[var(--secondary-color)]"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

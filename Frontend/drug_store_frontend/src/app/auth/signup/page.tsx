@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
+import { registerAndLogin } from "../../../../lib/api/auth";
+import UserMessage from "../../../../lib/components/ui/userMassage";
+import { useRouter } from "next/navigation";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -18,10 +22,19 @@ const SignupPage = () => {
       return;
     }
 
-    // Proceed with signup logic here
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Terms accepted:", acceptedTerms);
+    const result = await registerAndLogin(email, password);
+
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+
+    alert("Registration successful!");
+    setEmail("");
+    setPassword("");
+    setAcceptedTerms(false);
+
+    router.push("/?registered=1");
   };
 
   return (
@@ -114,7 +127,13 @@ const SignupPage = () => {
             </label>
           </div>
 
-          {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
+          {error && (
+            <UserMessage
+              message={error}
+              type="error"
+              onClose={() => setError(null)}
+            />
+          )}
 
           <div>
             <button

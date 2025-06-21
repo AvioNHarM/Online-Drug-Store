@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../../../lib/components/navbar";
 import Head from "next/head";
 
-import { Product, ProductForm } from "../../../lib/util/types";
+import { useSession } from "next-auth/react";
+import { Product, ProductForm } from "../../../lib/types/product";
 import {
   addProduct,
   deleteProduct,
@@ -12,8 +13,13 @@ import {
   toggleListedStatus,
   updateProduct,
 } from "../../../lib/api/product";
+import { useRouter } from "next/navigation";
+import { isUserAdmin } from "../../../lib/api/auth";
 
 export default function ProductManagementPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [productForm, setProductForm] = useState<ProductForm>({
@@ -24,7 +30,43 @@ export default function ProductManagementPage() {
     tags: "",
   });
   const [products, setProducts] = useState<Product[]>([]);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session) {
+      router.push("/auth/login");
+      return;
+    }
+
+    async function handleAdminCheck() {
+      try {
+        if (!session || !session.user || !session.user.id) {
+          router.push("/auth/login");
+          return;
+        }
+
+        const isAdmin = await isUserAdmin(session.user.id);
+
+        if (!isAdmin) {
+          router.push("/");
+          return;
+        }
+
+        setIsAdmin(true);
+      } catch (error) {
+        console.error(error);
+        router.push("/");
+      }
+    }
+
+    handleAdminCheck();
+  }, [session, status, router]);
+
+  if (status === "loading" || isAdmin === null) {
+    return <p>Loading...</p>;
+  }
   const loadProducts = async () => {
     try {
       const data = await fetchProducts();
@@ -38,13 +80,19 @@ export default function ProductManagementPage() {
     loadProducts();
   }, []);
 
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    throw new Error("User ID is missing");
+  }
+
   const handleSubmitProduct = async () => {
     try {
       if (editProductId) {
-        await updateProduct(editProductId, productForm);
+        await updateProduct(editProductId, productForm, userId);
         alert("Product updated successfully");
       } else {
-        await addProduct(productForm);
+        await addProduct(productForm, userId);
         alert("Product added successfully");
       }
       setShowAddForm(false);
@@ -76,7 +124,7 @@ export default function ProductManagementPage() {
 
   const handleToggleListed = async (product: Product) => {
     try {
-      await toggleListedStatus(product.id);
+      await toggleListedStatus(product.id, userId);
       loadProducts();
     } catch (err: any) {
       alert(err.message || "Failed to toggle listed status");
@@ -86,7 +134,7 @@ export default function ProductManagementPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
-      await deleteProduct(id);
+      await deleteProduct(id, userId);
       alert("Product deleted successfully");
       loadProducts();
     } catch (err: any) {

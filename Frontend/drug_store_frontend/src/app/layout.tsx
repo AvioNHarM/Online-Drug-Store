@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthProvider from "../../lib/components/auth/SessionProvidor";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -28,12 +29,16 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
           rel="stylesheet"
         />
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet"
+        />
       </head>
       <body
         className="antialiased"
         style={{ fontFamily: "'Lexend', 'Noto Sans', sans-serif" }}
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

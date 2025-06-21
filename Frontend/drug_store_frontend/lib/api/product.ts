@@ -1,4 +1,4 @@
-import { Product, ProductForm } from "../util/types";
+import { Product, ProductForm } from "../types/product";
 
 const BASE_URL = "http://127.0.0.1:8000/drugstore/products";
 

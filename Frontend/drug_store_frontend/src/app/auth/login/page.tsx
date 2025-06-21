@@ -3,10 +3,36 @@
 import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import UserMessage from "../../../../lib/components/ui/userMassage";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+
+    if (!result || result.error) {
+      setError(result?.error || "Login failed");
+      return;
+    }
+
+    alert("Login successful!");
+    setEmail("");
+    setPassword("");
+    router.push("/?loggedin=1"); // redirect on success
+  };
 
   return (
     <>
@@ -43,10 +69,7 @@ export default function LoginPage() {
               Welcome Back
             </h2>
 
-            <form
-              className="w-full space-y-6"
-              onSubmit={(e) => e.preventDefault()}
-            >
+            <form className="w-full space-y-6" onSubmit={handleSubmit}>
               <div className="flex flex-col">
                 <label
                   htmlFor="email"
@@ -61,6 +84,7 @@ export default function LoginPage() {
                   className="form-input w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-input)] px-4 py-3 text-base text-[var(--text-primary)] placeholder:text-[var(--soft-text)] focus:border-[var(--primary-color)] focus:ring-1 focus:ring-[var(--primary-color)] transition-colors duration-200"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
 
@@ -78,6 +102,7 @@ export default function LoginPage() {
                   className="form-input w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-input)] px-4 py-3 text-base text-[var(--text-primary)] placeholder:text-[var(--soft-text)] focus:border-[var(--primary-color)] focus:ring-1 focus:ring-[var(--primary-color)] transition-colors duration-200"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
 
@@ -90,6 +115,14 @@ export default function LoginPage() {
                 </Link>
               </div>
 
+              {error && (
+                <UserMessage
+                  message={error}
+                  type="error"
+                  onClose={() => setError(null)}
+                />
+              )}
+
               <button
                 type="submit"
                 className="flex w-full items-center justify-center rounded-lg bg-[var(--primary-color)] px-5 py-3.5 text-base font-semibold text-white shadow-md hover:bg-[var(--secondary-color-button)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-offset-2 transition-colors duration-200"
@@ -101,7 +134,7 @@ export default function LoginPage() {
             <p className="text-sm text-[var(--soft-text)]">
               Don't have an account?{" "}
               <Link
-                href="#"
+                href="/signup"
                 className="font-medium text-[var(--primary-color)] hover:text-[var(--secondary-color)] hover:underline transition-colors duration-200"
               >
                 Sign up

@@ -1,11 +1,40 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "../../lib/components/navbar";
 import Footer from "../../lib/components/footer";
+import { useSearchParams } from "next/navigation";
+import UserMassage from "../../lib/components/ui/userMassage";
 
 const Homepage = () => {
+  const searchParams = useSearchParams();
+  const [messageInfo, setMessageInfo] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("registered") === "1") {
+      setMessageInfo({
+        message: "User was created successfully!",
+        type: "success",
+      });
+    } else if (searchParams.get("loggedin") === "1") {
+      setMessageInfo({ message: "Logged in successfully!", type: "success" });
+    }
+  }, [searchParams]);
+
+  // After 5 seconds, clear messageInfo (this will trigger exit animation)
+  useEffect(() => {
+    if (messageInfo) {
+      const timer = setTimeout(() => {
+        setMessageInfo(null);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [messageInfo]);
+
   return (
     <>
       <style jsx global>{`
@@ -24,7 +53,7 @@ const Homepage = () => {
         }
 
         .hero-bg-image {
-          background: #545353; /* or any other shade of gray you prefer */
+          background: #545353;
         }
 
         .gradient-text {
@@ -92,6 +121,22 @@ const Homepage = () => {
         <div className="layout-container flex h-full grow flex-col">
           <Navbar />
 
+          <div
+            style={{
+              position: "fixed",
+              top: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 9999,
+              width: "min(90%, 400px)",
+            }}
+          >
+            <UserMassage
+              message={messageInfo?.message || ""}
+              type={messageInfo?.type || "error"}
+              onClose={() => setMessageInfo(null)}
+            />
+          </div>
           <main className="flex-1">
             {/* Hero Section */}
             <section className="relative hero-bg-image text-white" id="hero">

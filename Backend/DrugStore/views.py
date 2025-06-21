@@ -306,7 +306,13 @@ def register(request) -> JsonResponse:
         if not success:
             return error_response(message, status=400)
 
-        return JsonResponse({"message": message, "userid": account.userid}, status=201)
+        user_data = {
+            "id": account.userid,
+            "email": account.email,
+            "name": account.email.split("@")[0],
+        }
+
+        return JsonResponse({"message": message, "user": user_data}, status=201)
 
     except json.JSONDecodeError:
         return error_response("Invalid JSON", status=400)
@@ -341,26 +347,16 @@ def login(request) -> JsonResponse:
         if not success:
             return error_response(message, status=400)
 
-        return JsonResponse({"message": message, "userid": account.userid}, status=200)
+        user_data = {
+            "id": account.userid,
+            "email": account.email,
+            "name": account.email.split("@")[0],
+        }
+
+        return JsonResponse({"message": message, "user": user_data}, status=200)
 
     except json.JSONDecodeError:
         return error_response("Invalid JSON", status=400)
-
-
-@csrf_exempt
-def logout(request) -> JsonResponse:
-    """
-    View to handle user logout.
-
-    Expects: No parameters.
-
-    Returns:
-        -   JsonResponse with logout message and clears JWT cookie. Status 200.
-    """
-
-    response = JsonResponse({"message": "Logged out successfully"})
-    response.delete_cookie("jwt")
-    return response
 
 
 @csrf_exempt
@@ -386,6 +382,7 @@ def is_admin(request) -> JsonResponse:
         userid = data.get("userid")
 
         success, message = handle_admin(userid)
+
         if not success:
             return error_response(message, status=400)
 
