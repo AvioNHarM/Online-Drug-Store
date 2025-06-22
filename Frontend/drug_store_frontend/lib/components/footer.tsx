@@ -23,7 +23,7 @@ const Footer = () => {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="#shop"
+                  href="/gallery"
                   className="hover:text-[var(--primary-color)] transition-colors"
                 >
                   Shop

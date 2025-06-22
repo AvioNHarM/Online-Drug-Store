@@ -2,11 +2,37 @@ import { Product, ProductForm } from "../types/product";
 
 const BASE_URL = "http://127.0.0.1:8000/drugstore/products";
 
-export async function fetchProducts(): Promise<Product[]> {
-  const res = await fetch(`${BASE_URL}/`);
-  if (!res.ok) throw new Error("Failed to fetch products");
-  return res.json();
-}
+export const fetchProducts = async (): Promise<Product[]> => {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/drugstore/products/");
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+
+export const fetchProductById = async (id: string | number): Promise<Product> => {
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/drugstore/products/get/?id=${id}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error fetching product ${id}:`, error);
+    throw error;
+  }
+};
 
 export async function addProduct(product: ProductForm, userid: string) {
   const formData = new FormData();
