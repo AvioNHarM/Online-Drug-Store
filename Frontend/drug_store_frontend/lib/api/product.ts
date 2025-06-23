@@ -4,7 +4,7 @@ const BASE_URL = "http://127.0.0.1:8000/drugstore/products";
 
 export const fetchProducts = async (): Promise<Product[]> => {
   try {
-    const response = await fetch("http://127.0.0.1:8000/drugstore/products/");
+    const response = await fetch(`${BASE_URL}`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -20,7 +20,14 @@ export const fetchProducts = async (): Promise<Product[]> => {
 
 export const fetchProductById = async (id: string | number): Promise<Product> => {
   try {
-    const response = await fetch(`http://127.0.0.1:8000/drugstore/products/get/?id=${id}`);
+      const response = await fetch(`${BASE_URL}/get/?id=${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add cache control for better performance
+        cache: 'no-store', // or 'force-cache' depending on your needs
+      });
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -42,7 +49,7 @@ export async function addProduct(product: ProductForm, userid: string) {
   formData.append("tags", product.tags);
   formData.append("userid", userid);
   if (product.img) {
-    formData.append("img", product.img); // should be a File or Blob
+    formData.append("img", product.img);
   }
 
   const res = await fetch(`${BASE_URL}/add/`, {

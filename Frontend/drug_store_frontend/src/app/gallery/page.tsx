@@ -3,6 +3,7 @@
 import Head from "next/head";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import Button from "../../../lib/components/ui/button";
 import Navbar from "../../../lib/components/navbar";
@@ -227,12 +228,16 @@ export default function GalleryPage() {
                           {/* Fixed height image container */}
                           <div className="relative w-full h-48 overflow-hidden flex-shrink-0">
                             {product.img ? (
-                              <div
-                                className="product-image w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
-                                style={{
-                                  backgroundImage: `url("${product.img}")`,
-                                }}
-                              ></div>
+                              <Image
+                                src={
+                                  product.img?.startsWith("http")
+                                    ? product.img
+                                    : product.img
+                                }
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                              />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center group-hover:from-blue-100 group-hover:to-indigo-200 transition-all duration-300">
                                 <div className="w-16 h-16 mb-3 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">

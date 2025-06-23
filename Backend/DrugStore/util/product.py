@@ -7,13 +7,19 @@ from difflib import SequenceMatcher
 # ************************** Product Control Views Util File**************************
 
 
-def product_to_json_serializable(product: Products) -> dict:
+def product_to_json_serializable(product: Products, request=None) -> dict:
+    img_url = None
+    if product.img and request:
+        img_url = request.build_absolute_uri(product.img.url)
+    elif product.img:
+        img_url = product.img.url
+
     return {
         "id": product.id,
         "name": product.name,
         "description": product.description,
         "price": product.price,
-        "img": str(product.img) if product.img else None,
+        "img": img_url,
         "tags": product.tags,
         "listed": product.listed,
         "created_at": product.created_at.isoformat(),

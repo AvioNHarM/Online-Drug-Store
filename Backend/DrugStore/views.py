@@ -69,7 +69,7 @@ def get_product(request) -> JsonResponse:
     """
 
     try:
-        product_id = int(request.GET.get("id", None))
+        product_id = uuid.UUID(request.GET.get("id", None))
     except (TypeError, ValueError):
         return error_response("Invalid or missing product ID", status=400)
 
@@ -77,7 +77,9 @@ def get_product(request) -> JsonResponse:
 
     if sucssess:
         return JsonResponse(
-            product_to_json_serializable(product), safe=False, status=200
+            product_to_json_serializable(product, request=request),
+            safe=False,
+            status=200,
         )
 
     return error_response(message, status=404)

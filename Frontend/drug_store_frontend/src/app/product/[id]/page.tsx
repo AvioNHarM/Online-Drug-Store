@@ -1,35 +1,98 @@
 "use client";
 
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import Button from "../../../../lib/components/ui/button";
+import Link from "next/link";
+import { Product } from "../../../../lib/types/product";
+
+import { fetchProductById } from "../../../../lib/api/product";
 import Navbar from "../../../../lib/components/navbar";
+import { LoadingSpinner } from "../../../../lib/components/loadingSpinner";
+import { NotFoundPage } from "../../../../lib/components/404Page";
+import { ErrorPage } from "../../../../lib/components/errorPage";
+import Button from "../../../../lib/components/ui/button";
 import Footer from "../../../../lib/components/footer";
+import { addToCart } from "../../../../lib/api/cart";
 
-type ProductDetail = {
-  label: string;
-  value: string;
-};
-
-const productDetails: ProductDetail[] = [
-  { label: "Active Ingredient", value: "Acetaminophen 500mg" },
-  {
-    label: "Dosage",
-    value:
-      "Adults: 1-2 tablets every 4-6 hours, not to exceed 8 tablets in 24 hours",
-  },
-  { label: "Form", value: "Tablets" },
-  { label: "Quantity", value: "100 tablets" },
-];
-
-// --- The Main Page Component ---
+import { useSession } from "next-auth/react";
 
 const ProductPage = ({ params }: { params: { id: string } }) => {
   const { id } = params;
+  const { data: session } = useSession();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setNotFound(false);
+
+      const productData = await fetchProductById(id);
+
+      // Check if product is listed/active
+      if (!productData.listed) {
+        setNotFound(true);
+      } else {
+        setProduct(productData);
+      }
+    } catch (err: any) {
+      console.error("Error fetching product:", err);
+
+      // Check if it's a 404 error
+      if (
+        err.message?.includes("404") ||
+        err.message?.includes("status: 404")
+      ) {
+        setNotFound(true);
+      } else {
+        setError(err.message || "An unexpected error occurred");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleAddToCart = async (
+    productId: string,
+    event: React.MouseEvent
+  ) => {
+    event.preventDefault(); // Prevent navigation to product page
+    event.stopPropagation();
+
+    if (!session?.user?.id) {
+      alert("Please log in to add items to cart");
+      return;
+    }
+
+    try {
+      await addToCart({
+        userid: session.user.id,
+        product_id: productId,
+        quantity: 1,
+      });
+
+      // Show success message (you might want to use a proper toast notification)
+      alert("Product added to cart successfully!");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Failed to add product to cart. Please try again.");
+    } finally {
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
 
   return (
-    // The font-family is applied here as in the body tag of the HTML.
-    // In a real Next.js app, this is better handled in a root layout file.
     <div
       className="relative flex size-full min-h-screen flex-col bg-slate-50 text-[var(--text-primary)]"
       style={{ fontFamily: 'Lexend, "Noto Sans", sans-serif' }}
@@ -47,7 +110,7 @@ const ProductPage = ({ params }: { params: { id: string } }) => {
               <ol className="flex items-center gap-2 text-sm">
                 <li>
                   <Link
-                    href="#"
+                    href="/shop"
                     className="font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--primary-color)]"
                   >
                     Shop
@@ -58,77 +121,118 @@ const ProductPage = ({ params }: { params: { id: string } }) => {
                 </li>
                 <li>
                   <span className="font-medium text-[var(--text-primary)]">
-                    Product
+                    {loading ? "Loading..." : product?.name || "Product"}
                   </span>
                 </li>
               </ol>
             </nav>
 
-            <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
-              <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-100 shadow-lg">
-                <Image
-                  src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1200"
-                  alt="Pain Relief Tablets"
-                  fill
-                  className="object-cover"
-                />
-              </div>
+            {loading && <LoadingSpinner />}
 
-              <div>
-                <h1 className="mb-2 text-3xl font-bold leading-tight tracking-tight">
-                  Pain Relief Tablets
-                </h1>
-                <p className="mb-6 text-base leading-relaxed text-[var(--text-secondary)]">
-                  Fast-acting relief for headaches, muscle aches, and fever.
-                  Each tablet contains 500mg of acetaminophen.
-                </p>
+            {notFound && <NotFoundPage />}
 
-                <section className="mb-6">
-                  <h3 className="mb-3 text-xl font-semibold leading-tight tracking-tight">
-                    Product Details
-                  </h3>
-                  <div className="space-y-3">
-                    {productDetails.map((detail) => (
-                      <div
-                        key={detail.label}
-                        className="grid grid-cols-[auto_1fr] gap-x-4 border-t border-slate-200 pt-3"
-                      >
+            {error && <ErrorPage message={error} onRetry={fetchProduct} />}
+
+            {product && !loading && !error && !notFound && (
+              <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
+                <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-100 shadow-lg">
+                  <Image
+                    src={
+                      product.img?.startsWith("http")
+                        ? product.img
+                        : product.img
+                        ? `/${product.img}`
+                        : "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1200"
+                    }
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
+                <div>
+                  <h1 className="mb-2 text-3xl font-bold leading-tight tracking-tight">
+                    {product.name}
+                  </h1>
+                  <p className="mb-6 text-base leading-relaxed text-[var(--text-secondary)]">
+                    {product.description}
+                  </p>
+
+                  {product.tags.length > 0 && (
+                    <section className="mb-6">
+                      <h3 className="mb-3 text-xl font-semibold leading-tight tracking-tight">
+                        Tags
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {product.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  <section className="mb-6">
+                    <h3 className="mb-3 text-xl font-semibold leading-tight tracking-tight">
+                      Product Details
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-[auto_1fr] gap-x-4 border-t border-slate-200 pt-3">
                         <p className="text-sm font-medium text-[var(--text-secondary)]">
-                          {detail.label}:
+                          Product ID:
                         </p>
                         <p className="text-sm text-[var(--text-primary)]">
-                          {detail.value}
+                          {product.id}
                         </p>
                       </div>
-                    ))}
+                      <div className="grid grid-cols-[auto_1fr] gap-x-4 border-t border-slate-200 pt-3">
+                        <p className="text-sm font-medium text-[var(--text-secondary)]">
+                          Status:
+                        </p>
+                        <p className="text-sm text-[var(--text-primary)]">
+                          {product.listed ? "Available" : "Unavailable"}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-[auto_1fr] gap-x-4 border-t border-slate-200 pt-3">
+                        <p className="text-sm font-medium text-[var(--text-secondary)]">
+                          Added:
+                        </p>
+                        <p className="text-sm text-[var(--text-primary)]">
+                          {formatDate(product.created_at)}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-[auto_1fr] gap-x-4 border-t border-slate-200 pt-3">
+                        <p className="text-sm font-medium text-[var(--text-secondary)]">
+                          Last Updated:
+                        </p>
+                        <p className="text-sm text-[var(--text-primary)]">
+                          {formatDate(product.updated_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <div className="flex items-center gap-4">
+                    <p className="text-3xl font-bold text-[var(--primary-color)]">
+                      ${product.price.toFixed(2)}
+                    </p>
+                    <Button
+                      variant="primary"
+                      className="h-12 max-w-[480px] flex-1 px-6 text-base font-bold tracking-[0.015em] shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-opacity-50"
+                      onClick={(e) => {
+                        handleAddToCart(product.id, e);
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
                   </div>
-                </section>
-
-                <section className="mb-8">
-                  <h3 className="mb-3 text-xl font-semibold leading-tight tracking-tight">
-                    Warnings
-                  </h3>
-                  <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
-                    Do not exceed recommended dosage. Consult a healthcare
-                    professional before use if you have liver disease or are
-                    taking other medications. Keep out of reach of children.
-                  </p>
-                </section>
-
-                <div className="flex items-center gap-4">
-                  <p className="text-3xl font-bold text-[var(--primary-color)]">
-                    $9.99
-                  </p>
-                  {/* Using the pre-existing Button component with custom classes to match the design */}
-                  <Button
-                    variant="primary"
-                    className="h-12 max-w-[480px] flex-1 px-6 text-base font-bold tracking-[0.015em] shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-opacity-50"
-                  >
-                    Add to Cart
-                  </Button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </main>
         <Footer />
