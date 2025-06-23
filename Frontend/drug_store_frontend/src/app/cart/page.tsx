@@ -6,6 +6,7 @@ import Navbar from "../../../lib/components/navbar";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { LoadingSpinner } from "../../../lib/components/loadingSpinner";
 
 export default function CartPage() {
   const { data: session, status } = useSession();
@@ -20,9 +21,7 @@ export default function CartPage() {
   }, [session, status, router]);
 
   if (status === "loading" || !session) {
-    return (
-      <p className="text-center pt-20 text-lg text-gray-600">Loading...</p>
-    );
+    return <LoadingSpinner />;
   }
 
   const cartItems = [

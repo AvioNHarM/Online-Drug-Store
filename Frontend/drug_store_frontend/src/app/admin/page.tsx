@@ -15,6 +15,7 @@ import {
 } from "../../../lib/api/product";
 import { useRouter } from "next/navigation";
 import { isUserAdmin } from "../../../lib/api/auth";
+import { LoadingSpinner } from "../../../lib/components/loadingSpinner";
 
 export default function ProductManagementPage() {
   const { data: session, status } = useSession();
@@ -65,7 +66,7 @@ export default function ProductManagementPage() {
   }, [session, status, router]);
 
   if (status === "loading" || isAdmin === null) {
-    return <p>Loading...</p>;
+    return <LoadingSpinner />;
   }
   const loadProducts = async () => {
     try {

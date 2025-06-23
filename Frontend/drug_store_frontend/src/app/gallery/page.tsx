@@ -11,6 +11,7 @@ import Footer from "../../../lib/components/footer";
 import { Product } from "../../../lib/types/product";
 import { fetchProducts } from "../../../lib/api/product";
 import { addToCart } from "../../../lib/api/cart";
+import { LoadingSpinner } from "../../../lib/components/loadingSpinner";
 
 export default function GalleryPage() {
   const { data: session, status } = useSession();
@@ -97,7 +98,7 @@ export default function GalleryPage() {
             <Navbar />
             <main className="px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-8 bg-gray-50">
               <div className="flex items-center justify-center">
-                <div className="text-lg">Loading products...</div>
+                <LoadingSpinner />
               </div>
             </main>
             <Footer />
