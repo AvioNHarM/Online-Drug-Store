@@ -51,7 +51,7 @@ def list_products(request) -> JsonResponse:
 
     products = get_product_list()
     serialized_products = [
-        product_to_json_serializable(product) for product in products
+        product_to_json_serializable(product, request) for product in products
     ]
     return JsonResponse(serialized_products, safe=False, status=200)
 

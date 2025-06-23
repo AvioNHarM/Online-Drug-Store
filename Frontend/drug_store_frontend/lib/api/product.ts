@@ -25,8 +25,7 @@ export const fetchProductById = async (id: string | number): Promise<Product> =>
         headers: {
           'Content-Type': 'application/json',
         },
-        // Add cache control for better performance
-        cache: 'no-store', // or 'force-cache' depending on your needs
+        cache: 'no-store',
       });
     
     if (!response.ok) {

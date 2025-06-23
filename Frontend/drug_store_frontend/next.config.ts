@@ -3,9 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
 };
+/** @type {import('next').NextConfig} */
 module.exports = {
   images: {
-        remotePatterns: [
+    remotePatterns: [
       {
         protocol: 'http',
         hostname: '127.0.0.1',
@@ -21,9 +22,16 @@ module.exports = {
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
-      }],
-    domains: ["images.unsplash.com" , 'lh3.googleusercontent.com'],
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+    ],
   },
 };
+
 
 export default nextConfig;

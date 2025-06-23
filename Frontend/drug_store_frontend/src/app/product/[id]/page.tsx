@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "../../../../lib/types/product";
@@ -13,22 +13,28 @@ import { ErrorPage } from "../../../../lib/components/errorPage";
 import Button from "../../../../lib/components/ui/button";
 import Footer from "../../../../lib/components/footer";
 import { addToCart } from "../../../../lib/api/cart";
+import { safeAddToHistory } from "../../../../lib/api/history";
 
 import { useSession } from "next-auth/react";
 
-const ProductPage = ({ params }: { params: { id: string } }) => {
-  const { id } = params;
+const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = use(params);
   const { data: session } = useSession();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
+  // Ref to track if history has been added for this product view
+  const historyAddedRef = useRef(false);
+
   const fetchProduct = async () => {
     try {
       setLoading(true);
       setError(null);
       setNotFound(false);
+      // Reset history tracking when fetching new product
+      historyAddedRef.current = false;
 
       const productData = await fetchProductById(id);
 
@@ -54,6 +60,7 @@ const ProductPage = ({ params }: { params: { id: string } }) => {
       setLoading(false);
     }
   };
+
   const handleAddToCart = async (
     productId: string,
     event: React.MouseEvent
@@ -78,9 +85,24 @@ const ProductPage = ({ params }: { params: { id: string } }) => {
     } catch (error) {
       console.error("Error adding to cart:", error);
       alert("Failed to add product to cart. Please try again.");
-    } finally {
     }
   };
+
+  // Effect to add product to history when user views it
+  useEffect(() => {
+    if (
+      product &&
+      session?.user?.id &&
+      !historyAddedRef.current &&
+      !loading &&
+      !error &&
+      !notFound
+    ) {
+      // Add to history and mark as added
+      safeAddToHistory(session.user.id, product.id);
+      historyAddedRef.current = true;
+    }
+  }, [product, session?.user?.id, loading, error, notFound]);
 
   useEffect(() => {
     if (id) {
