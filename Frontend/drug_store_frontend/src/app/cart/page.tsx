@@ -47,7 +47,17 @@ export default function CartPage() {
   }, [session, status, router]);
 
   if (status === "loading" || !session || loadingCart) {
-    return <LoadingSpinner />;
+    return (
+      <div className="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
+        <div className="layout-container flex h-full grow flex-col bg-slate-50">
+          <main className="px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-8 bg-gray-50">
+            <div className="flex items-center justify-center">
+              <LoadingSpinner />
+            </div>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   const handleQuantityChange = async (

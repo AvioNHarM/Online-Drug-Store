@@ -203,11 +203,39 @@ def update_product_by_id(product_id: int, product_data: dict) -> tuple[bool, str
         )
 
 
-def is_similar(a: str, b: str, threshold: float = 0.6) -> bool:
-    return SequenceMatcher(None, a.lower(), b.lower()).ratio() >= threshold
+def calculate_similarity_score(product_name: str, search_token: str) -> float:
+    """
+    Calculate similarity score between product name and search token.
+    Returns a score between 0 and 1, where 1 is a perfect match.
+    """
+    product_lower = product_name.lower().strip()
+    print(f"Product Lower: {product_lower}")
+    token_lower = search_token.lower().strip()
+
+    if token_lower == product_lower:
+        return 1.0
+
+    if token_lower in product_lower:
+        return 0.8 + (len(token_lower) / len(product_lower)) * 0.2
+
+    similarity = SequenceMatcher(None, product_lower, token_lower).ratio()
+
+    return similarity if similarity >= 0.6 else 0.0
 
 
-def search_product_by_token(token: str) -> tuple[QuerySet | None, bool, str]:
+def search_product_by_token(
+    token: str, min_similarity: float = 0.6
+) -> tuple[QuerySet | None, bool, str]:
+    """
+    Search for products by token with improved similarity matching.
+
+    Args:
+        token: Search term
+        min_similarity: Minimum similarity score to consider a match (0.0 to 1.0)
+
+    Returns:
+        Tuple of (QuerySet, success_bool, message)
+    """
     token = token.strip() if token else ""
 
     if len(token) < 2:
@@ -219,16 +247,28 @@ def search_product_by_token(token: str) -> tuple[QuerySet | None, bool, str]:
 
     candidates = Products.objects.filter(name__icontains=token)
 
-    matched_products = [
-        product for product in candidates if is_similar(product.name, token)
-    ]
+    if not candidates.exists():
+        candidates = Products.objects.all()[:1000]
+
+    matched_products = []
+    for product in candidates:
+        similarity_score = calculate_similarity_score(product.name, token)
+        if similarity_score >= min_similarity:
+            matched_products.append((product, similarity_score))
 
     if not matched_products:
         return (Products.objects.none(), False, "No products matched the search term.")
 
-    ids = [p.id for p in matched_products]
+    matched_products.sort(key=lambda x: x[1], reverse=True)
+    matched_product_ids = [product.id for product, _ in matched_products]
+
+    final_queryset = Products.objects.filter(id__in=matched_product_ids)
+
+    preserved_order = {id: index for index, id in enumerate(matched_product_ids)}
+    final_queryset = sorted(final_queryset, key=lambda x: preserved_order[x.id])
+
     return (
-        Products.objects.filter(id__in=ids),
+        final_queryset,
         True,
-        "Products were successfully fetched based on the search term.",
+        f"Found {len(matched_products)} products matching the search term.",
     )

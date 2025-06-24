@@ -54,7 +54,13 @@ const Navbar = () => {
             href="/info"
             className="px-5 py-2.5 rounded-full text-gray-700 hover:text-gray-900 hover:bg-white/80 text-sm font-medium leading-normal transition-all duration-300 ease-in-out hover:shadow-sm border border-transparent hover:border-gray-200/50"
           >
-            Contact
+            About
+          </Link>
+          <Link
+            href="/faqs"
+            className="px-5 py-2.5 rounded-full text-gray-700 hover:text-gray-900 hover:bg-white/80 text-sm font-medium leading-normal transition-all duration-300 ease-in-out hover:shadow-sm border border-transparent hover:border-gray-200/50"
+          >
+            FAQs
           </Link>
         </nav>
 

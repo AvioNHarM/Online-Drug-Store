@@ -31,7 +31,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#services"
+                  href="/services"
                   className="hover:text-[var(--primary-color)] transition-colors"
                 >
                   Services
@@ -39,10 +39,18 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#faqs"
+                  href="/faqs"
                   className="hover:text-[var(--primary-color)] transition-colors"
                 >
                   FAQs
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/faqs"
+                  className="hover:text-[var(--primary-color)] transition-colors"
+                >
+                  About
                 </Link>
               </li>
             </ul>
@@ -64,14 +72,6 @@ const Footer = () => {
                   className="hover:text-[var(--primary-color)] transition-colors"
                 >
                   Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#contact"
-                  className="hover:text-[var(--primary-color)] transition-colors"
-                >
-                  Contact Us
                 </Link>
               </li>
             </ul>

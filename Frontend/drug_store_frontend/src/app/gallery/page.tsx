@@ -12,34 +12,46 @@ import { Product } from "../../../lib/types/product";
 import { fetchProducts } from "../../../lib/api/product";
 import { addToCart } from "../../../lib/api/cart";
 import { LoadingSpinner } from "../../../lib/components/loadingSpinner";
+import { searchProducts } from "../../../lib/api/other";
 
 export default function GalleryPage() {
   const { data: session, status } = useSession();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Changed to false to pre-load other elements
+  const [initialLoad, setInitialLoad] = useState(true); // New state for initial product load
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
-  // Fetch products from API
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        setLoading(true);
-        const data = await fetchProducts();
+        setLoading(true); // Set loading for the products section
+        setError(null);
+
+        const data = searchQuery
+          ? await searchProducts(searchQuery)
+          : await fetchProducts();
+
         setProducts(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
+        setInitialLoad(false); // Initial load complete
       }
     };
 
-    loadProducts();
-  }, []);
+    const handler = setTimeout(() => {
+      loadProducts();
+    }, 2000); // 2 seconds delay before making the API call
 
-  // Handle add to cart
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]); // Dependency on searchQuery
+
   const handleAddToCart = async (
     productId: string,
     event: React.MouseEvent
@@ -78,59 +90,12 @@ export default function GalleryPage() {
 
     if (activeFilter === "All") return matchesSearch;
 
-    // Filter by tags if they exist
     return (
       matchesSearch &&
       product.tags &&
       product.tags.includes(activeFilter.toLowerCase())
     );
   });
-
-  if (loading) {
-    return (
-      <>
-        <Head>
-          <meta charSet="utf-8" />
-          <title>HealthPlus Pharmacy</title>
-        </Head>
-        <div className="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
-          <div className="layout-container flex h-full grow flex-col bg-slate-50">
-            <Navbar />
-            <main className="px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-8 bg-gray-50">
-              <div className="flex items-center justify-center">
-                <LoadingSpinner />
-              </div>
-            </main>
-            <Footer />
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <Head>
-          <meta charSet="utf-8" />
-          <title>HealthPlus Pharmacy</title>
-        </Head>
-        <div className="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
-          <div className="layout-container flex h-full grow flex-col bg-slate-50">
-            <Navbar />
-            <main className="px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-8 bg-gray-50">
-              <div className="flex items-center justify-center">
-                <div className="text-lg text-red-600">
-                  Error loading products: {error}
-                </div>
-              </div>
-            </main>
-            <Footer />
-          </div>
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
@@ -159,6 +124,7 @@ export default function GalleryPage() {
 
           <main className="px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-8 bg-gray-50">
             <div className="layout-content-container flex flex-col max-w-7xl flex-1">
+              {/* Search Bar */}
               <div className="px-4 py-6">
                 <label className="flex flex-col min-w-40 h-14 w-full">
                   <div className="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm border border-transparent focus-within:border-[var(--primary-color)] focus-within:ring-2 focus-within:ring-[var(--primary-color)] focus-within:ring-opacity-50 transition-all">
@@ -183,6 +149,7 @@ export default function GalleryPage() {
                 </label>
               </div>
 
+              {/* Categories/Filters */}
               <div className="flex gap-3 p-4 flex-wrap items-center">
                 <span className="text-[var(--text-secondary)] text-sm font-medium mr-2">
                   Filter by:
@@ -209,17 +176,28 @@ export default function GalleryPage() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-4">
-                {filteredProducts.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-[var(--text-secondary)] text-lg">
-                      {searchQuery || activeFilter !== "All"
-                        ? "No products found matching your criteria."
-                        : "No products available."}
-                    </p>
+              {/* Products Section - Conditional Loading */}
+              {initialLoad || loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner />
+                </div>
+              ) : error ? (
+                <div className="col-span-full text-center py-8">
+                  <div className="text-lg text-red-600">
+                    Error loading products: {error}
                   </div>
-                ) : (
-                  filteredProducts.map((product) => (
+                </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-[var(--text-secondary)] text-lg">
+                    {searchQuery || activeFilter !== "All"
+                      ? "No products found matching your criteria."
+                      : "No products available."}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-4">
+                  {filteredProducts.map((product) => (
                     <div key={product.id} className="block h-full relative">
                       <Link
                         href={`/product/${product.id}`}
@@ -308,7 +286,6 @@ export default function GalleryPage() {
                               </p>
                             </div>
 
-                            {/* Add to Cart Button - Only show if user is logged in */}
                             {/* Price and tags at bottom */}
                             <div className="mt-auto">
                               <p className="text-lg font-bold text-[var(--primary-color)] mb-2">
@@ -342,9 +319,9 @@ export default function GalleryPage() {
                         </div>
                       </Link>
                     </div>
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </main>
           <Footer />
