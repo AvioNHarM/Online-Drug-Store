@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 import uuid
 
 
+from DrugStore.util.ai import get_diseases_prediction
 from DrugStore.models import Accounts, Products
 from DrugStore.util.general import error_response
 from DrugStore.util.history import (
@@ -689,9 +690,37 @@ def get_payment_status(request) -> JsonResponse:
 
 
 # *AI Control Views
-def ai_product_matcher(request) -> JsonResponse:
-    """
-    View to match products using AI.
-    """
 
-    pass
+
+@csrf_exempt
+def user_diaggnostic(request) -> JsonResponse:
+    """
+    View to perform user diagnostics using AI.
+
+    Expects JSON body:
+        {
+            "symptoms": { "headache": 1, "fever": 0, ... },
+            ...
+        }
+
+    Returns:
+        - JsonResponse with predicted disease and status 200,
+        - or error JsonResponse with status 400.
+    """
+    if request.method != "POST":
+        return error_response("Only POST method allowed", status=405)
+
+    try:
+        data = json.loads(request.body)
+        symptoms = data.get("symptoms")
+        if not isinstance(symptoms, dict):
+            return error_response("Missing or invalid 'symptoms' field", status=400)
+
+        prediction = get_diseases_prediction(symptoms)
+        # prediction = "balls"
+        return JsonResponse(
+            {"prediction": prediction, "status": "success"},
+            status=200,
+        )
+    except Exception as e:
+        return error_response(f"AI diagnostic error: {str(e)}", status=400)

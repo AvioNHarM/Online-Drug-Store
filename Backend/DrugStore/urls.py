@@ -31,5 +31,5 @@ urlpatterns = [
     path("payment/cancel/", views.cancel_payment, name="cancel_payment"),
     path("payment/status/", views.get_payment_status, name="get_payment_status"),
     # AI Control
-    path("ai/product_matcher/", views.ai_product_matcher, name="ai_product_matcher"),
+    path("ai/product_matcher/", views.user_diaggnostic, name="ai_product_matcher"),
 ]

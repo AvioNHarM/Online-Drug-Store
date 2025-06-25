@@ -31,10 +31,10 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/services"
+                  href="/AI"
                   className="hover:text-[var(--primary-color)] transition-colors"
                 >
-                  Services
+                  AI
                 </Link>
               </li>
               <li>
