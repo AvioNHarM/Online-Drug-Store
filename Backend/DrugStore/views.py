@@ -717,7 +717,6 @@ def user_diaggnostic(request) -> JsonResponse:
             return error_response("Missing or invalid 'symptoms' field", status=400)
 
         prediction = get_diseases_prediction(symptoms)
-        # prediction = "balls"
         return JsonResponse(
             {"prediction": prediction, "status": "success"},
             status=200,

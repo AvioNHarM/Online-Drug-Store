@@ -4,7 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
 
-is_there_existing_model = True
+is_there_existing_model = False
 df = ""
 
 
