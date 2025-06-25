@@ -16,7 +16,7 @@ def get_diseases_prediction(user_input):
 
     # data file link https://data.mendeley.com/datasets/2cxccsxydc/1
     df = pd.read_csv(
-        "C:\\work\\code\\Personal Projects\\DrugStore\\data\\Disease and symptoms dataset.csv"
+        "C:\\work\\code\\Personal Projects\\DrugStore\\data\\DiseaseAndSymptomsDataset.csv"
     )
 
     y = df.drop(columns=["diseases"])
