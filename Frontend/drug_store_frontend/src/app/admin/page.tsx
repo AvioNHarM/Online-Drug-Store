@@ -1,21 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Navbar from "../../../lib/components/navbar";
-import Head from "next/head";
-
 import { useSession } from "next-auth/react";
-import { Product, ProductForm } from "../../../lib/types/product";
-import {
-  addProduct,
-  deleteProduct,
-  fetchProducts,
-  toggleListedStatus,
-  updateProduct,
-} from "../../../lib/api/product";
 import { useRouter } from "next/navigation";
-import { isUserAdmin } from "../../../lib/api/auth";
+import Head from "next/head";
+import Navbar from "../../../lib/components/navbar";
 import { LoadingSpinner } from "../../../lib/components/loadingSpinner";
+import { isUserAdmin } from "../../../lib/api/auth";
+import {
+  fetchProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  toggleListedStatus,
+} from "../../../lib/api/product";
+import { Product, ProductForm } from "../../../lib/types/product";
 
 export default function ProductManagementPage() {
   const { data: session, status } = useSession();
@@ -33,41 +32,34 @@ export default function ProductManagementPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (status === "loading") return;
+  const userId = session?.user?.id ?? null;
 
-    if (!session) {
-      router.push("/auth/login");
-      return;
-    }
+  useEffect(() => {
+    if (status !== "authenticated" || !userId) return;
 
     async function handleAdminCheck() {
       try {
-        if (!session || !session.user || !session.user.id) {
-          router.push("/auth/login");
-          return;
-        }
-
-        const isAdmin = await isUserAdmin(session.user.id);
-
+        const isAdmin = await isUserAdmin(userId as string);
         if (!isAdmin) {
           router.push("/");
-          return;
+        } else {
+          setIsAdmin(true);
         }
-
-        setIsAdmin(true);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
         router.push("/");
       }
     }
 
     handleAdminCheck();
-  }, [session, status, router]);
+  }, [status, userId, router]);
 
-  if (status === "loading" || isAdmin === null) {
-    return <LoadingSpinner />;
-  }
+  useEffect(() => {
+    if (isAdmin) {
+      loadProducts();
+    }
+  }, [isAdmin]);
+
   const loadProducts = async () => {
     try {
       const data = await fetchProducts();
@@ -77,16 +69,14 @@ export default function ProductManagementPage() {
     }
   };
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    throw new Error("User ID is missing");
+  if (status === "loading" || isAdmin === null) {
+    return <LoadingSpinner />;
   }
 
+  if (!userId) {
+    router.push("/auth/login");
+    return null;
+  }
   const handleSubmitProduct = async () => {
     try {
       if (editProductId) {
